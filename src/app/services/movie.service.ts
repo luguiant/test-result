@@ -4,14 +4,12 @@ import { Observable } from 'rxjs';
 
 import { Movie } from '../Interfaces/movie.interface';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable()
 export class MoviesService {
 
   public constructor(private http: HttpClient){}
 
-  public getMovies(year: number): Observable<HttpResponse<Movie | HttpErrorResponse >> {
-    return this.http.get<HttpResponse<Movie | HttpErrorResponse >>(`https://jsonmock.hackerrank.com/api/movies?Year=${year}`);
+  public getMovies(year: number): Observable<HttpResponse<Movie[] | HttpErrorResponse >> {
+    return this.http.get<HttpResponse<Movie[] | HttpErrorResponse >>(`https://jsonmock.hackerrank.com/api/movies?Year=${year}`);
   } 
 }
