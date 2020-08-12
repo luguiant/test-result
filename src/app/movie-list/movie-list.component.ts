@@ -1,4 +1,5 @@
 import {Component, OnInit} from '@angular/core';
+import { Movie } from '../Interfaces/movie.interface';
 
 @Component({
   selector: 'app-movie-list',
@@ -6,15 +7,15 @@ import {Component, OnInit} from '@angular/core';
   styleUrls: ['./movie-list.component.scss']
 })
 export class MovieListComponent implements OnInit {
-  movies : Movie[];
+  public movies : Movie[];
 
-  ngOnInit() {
+  constructor(){
+
+  }
+
+  public ngOnInit() {
   }
 
 }
 
-export interface Movie {
-  Title: string;
-  Year: number;
-  imdbID: number;
-}
+
