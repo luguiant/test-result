@@ -11,5 +11,5 @@ export class MoviesService {
 
   public constructor(private http: HttpClient){}
 
-  
+  public 
 }
