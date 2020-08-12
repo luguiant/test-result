@@ -9,12 +9,12 @@
   </section>
 
 
-  <ul *ngIf='movies' class="mt-50 styled" data-test-id="movieList">
+  <ul  [hidden]='!movies' class="mt-50 styled" data-test-id="movieList">
     <li *ngFor="let item of movies" class="slide-up-fade-in py-10">
-      {{item.Title}}
+      {{item.Title ? item.Title : ''}}
     </li>
   </ul>
 
-  <div *ngIf='!movies' class="mt-50 slide-up-fade-in"
-       data-test-id="no-result">Not Result Found</div>
+  <div [hidden]='movies' class="mt-50 slide-up-fade-in"
+       data-test-id="no-result">{{msg}}</div>
 </div>

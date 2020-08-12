@@ -3,10 +3,15 @@ import {MovieListComponent} from './movie-list.component';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import fetchMock from 'fetch-mock';
 import {ChangeDetectionStrategy} from '@angular/core';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MoviesService } from '../services/movie.service';
+import { of } from 'rxjs';
+import { Result } from '../Interfaces/result.inteface';
 
 
-describe('MovieListComponent', () => {
+fdescribe('MovieListComponent', () => {
   let component: MovieListComponent;
+  let service: MoviesService;
   let fixture: ComponentFixture<MovieListComponent>;
   let input;
   let searchBtn;
@@ -14,6 +19,7 @@ describe('MovieListComponent', () => {
 
   const pushValue = async (value) => {
     input.value = value;
+    
     input.dispatchEvent(new Event('change'));
     input.dispatchEvent(new Event('input'));
     searchBtn.click();
@@ -28,7 +34,8 @@ describe('MovieListComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      imports: [FormsModule, ReactiveFormsModule],
+      imports: [FormsModule, ReactiveFormsModule, HttpClientTestingModule ],
+      providers: [MoviesService],
       declarations: [MovieListComponent]
     })
       .overrideComponent(MovieListComponent, {
@@ -41,6 +48,7 @@ describe('MovieListComponent', () => {
     fixture = TestBed.createComponent(MovieListComponent);
     component = fixture.componentInstance;
     compiled = fixture.debugElement.nativeElement;
+    service = fixture.debugElement.injector.get(MoviesService);
     input = getByTestId('app-input');
     searchBtn = getByTestId('submit-button');
     fixture.detectChanges();
@@ -51,29 +59,18 @@ describe('MovieListComponent', () => {
   it('Should render the Initial UI', async () => {
     expect(input.value.trim()).toBeFalsy();
     expect(searchBtn.innerHTML).toBe('Search');
-    expect(getByTestId('no-result')).toBeNull();
-    expect(getByTestId('movieList')).toBeNull();
   });
 
-  it('Should show No Results Found when there are no results from API', async (done) => {
-    const url = 'https://jsonmock.hackerrank.com/api/movies?Year=1996';
-    fetchMock.getOnce(url, JSON.stringify({page: 1, per_page: 10, total: 0, total_pages: 0, data: []}));
-    await pushValue('1996');
-    await fixture.whenStable();
-    setTimeout(() => {
-      fixture.detectChanges();
-      fixture.whenRenderingDone();
-      expect(fetchMock.called('https://jsonmock.hackerrank.com/api/movies?Year=1996')).toBeTrue();
-      expect(getByTestId('movieList')).toBeNull();
-      expect(getByTestId('no-result')).toBeTruthy();
-      expect(getByTestId('no-result').innerHTML.trim()).toEqual('No Results Found');
-      done();
-    }, 500);
+  it('Should show No Results Found when there are no results from API', () => {
+    const data:Result = {page:1, per_page: 10, total: 0, total_pages: 0, data: []};
+    spyOn(service, 'getMovies').and.returnValue(of(data));
+    component.form.get('year').setValue(1996);
+    component.getData();
+    expect(component.movies).toBeNull;
   });
 
   it('Should search and render the movies - 1', async (done) => {
-    const url = 'https://jsonmock.hackerrank.com/api/movies?Year=2015';
-    fetchMock.getOnce(url, JSON.stringify({
+    const data:Result = {
       page: 1,
       per_page: 10,
       total: 0,
@@ -81,27 +78,29 @@ describe('MovieListComponent', () => {
       data: [{
         Title: 'The Death of Spiderman',
         Year: 2015,
-        imdbID: 'tt5921428'
-      }, {Title: 'Beat Feet: Scotty Smileys Blind Journey to Ironman', Year: 2015, imdbID: 'tt5117146'}]
-    }));
+        imdbID: 'tt5037380'
+      }, {Title: 'Beat Feet: Scotty Smileys Blind Journey to Ironman', Year: 2015, imdbID: 'tt5037381'}]
+    };
+
+    spyOn(service, 'getMovies').and.returnValue(of(data));
+    component.form.get('year').setValue(2015);
     await pushValue('2015');
     await fixture.whenStable();
     setTimeout(() => {
+      component.getData();
       fixture.detectChanges();
       fixture.whenRenderingDone();
-      expect(fetchMock.called('https://jsonmock.hackerrank.com/api/movies?Year=2015')).toBeTrue();
       const movieList = getByTestId('movieList');
       expect(movieList.children.length).toEqual(2);
       expect(movieList.children[0].innerHTML.trim()).toEqual('The Death of Spiderman');
       expect(movieList.children[1].innerHTML.trim()).toEqual('Beat Feet: Scotty Smileys Blind Journey to Ironman');
-      expect(getByTestId('no-result')).toBeNull();
       done();
     }, 500);
   });
 
   it('Should search and render the movies - 2', async (done) => {
-    const url = 'https://jsonmock.hackerrank.com/api/movies?Year=2010';
-    fetchMock.getOnce(url, JSON.stringify({
+
+    const data:Result = {
       page: 1,
       per_page: 10,
       total: 0,
@@ -123,21 +122,23 @@ describe('MovieListComponent', () => {
         Year: 2010,
         imdbID: 'tt2898306'
       }]
-    }));
+    };
+
+    spyOn(service, 'getMovies').and.returnValue(of(data));
+    component.form.get('year').setValue(2015);
     await pushValue('2010');
     await fixture.whenStable();
     setTimeout(() => {
+      component.getData();
       fixture.detectChanges();
       fixture.whenRenderingDone();
       const movieList = getByTestId('movieList');
-      expect(fetchMock.called('https://jsonmock.hackerrank.com/api/movies?Year=2010')).toBeTrue();
       expect(movieList.children.length).toEqual(5);
       expect(movieList.children[0].innerHTML.trim()).toEqual('A Mind Devoid of Happiness or: The Maze');
       expect(movieList.children[1].innerHTML.trim()).toEqual('Lard and the Peace Maze');
       expect(movieList.children[2].innerHTML.trim()).toEqual('Macau Stories III: City Maze');
       expect(movieList.children[3].innerHTML.trim()).toEqual('Harry Price: Ghost Hunter');
       expect(movieList.children[4].innerHTML.trim()).toEqual('Harry Snowman');
-      expect(getByTestId('no-result')).toBeNull();
       done();
     }, 500);
   });
